@@ -92,6 +92,8 @@ public class TacticalPingsPluginTest
 				bind(PingInput.class).toProvider(() -> mock(PingInput.class));
 				bind(PingTargetResolver.class).toProvider(() -> mock(PingTargetResolver.class));
 				bind(OverlayManager.class).toProvider(() -> mock(OverlayManager.class));
+				bind(net.runelite.client.ui.ClientToolbar.class).toProvider(() -> mock(net.runelite.client.ui.ClientToolbar.class));
+				bind(PingSettingsPanel.class).toProvider(() -> mock(PingSettingsPanel.class));
 				bind(ScenePingOverlay.class).toProvider(() -> mock(ScenePingOverlay.class));
 				bind(MinimapPingOverlay.class).toProvider(() -> mock(MinimapPingOverlay.class));
 				bind(PingWheelOverlay.class).toProvider(() -> mock(PingWheelOverlay.class));
@@ -293,5 +295,13 @@ public class TacticalPingsPluginTest
 		plugin.sendPing(TILE, PingSlot.EIGHT);
 		assertTrue(plugin.getActive().isEmpty());
 		verify(party, never()).send(any());
+	}
+
+	@Test
+	public void runtimeAcceptsAndCapsLifetimeAtOneMinute()
+	{
+		when(config.durationMillis()).thenReturn(Integer.MAX_VALUE);
+		plugin.sendPing(TILE, PingSlot.TWO);
+		assertEquals(0.5, plugin.getActive().get(0).progress(System.nanoTime() + 30_000_000_000L), 0.01);
 	}
 }

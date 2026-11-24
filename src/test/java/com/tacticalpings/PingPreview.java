@@ -76,6 +76,7 @@ public final class PingPreview
 		ig.dispose();
 		ImageIO.write(icon, "png", new File(directory, "icon.png"));
 		PingCustomizationPreview.main(args);
+		PingSettingsPreview.main(args);
 	}
 
 	private static Point2D project(double x, double y, double cx, double cy)

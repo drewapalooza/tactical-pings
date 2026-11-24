@@ -60,7 +60,7 @@ public class MinimapPingOverlay extends Overlay
 				{
 					continue;
 				}
-				double t = ping.progress(now);
+				double t = ping.visualProgress(now);
 				double radius = config.reducedMotion() ? 9 : 3 + 10 * PingAnimation.radius(t);
 				g.setColor(new java.awt.Color(ping.getStyle().getColor().getRed(), ping.getStyle().getColor().getGreen(),
 					ping.getStyle().getColor().getBlue(), (int) (230 * PingAnimation.opacity(t))));

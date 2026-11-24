@@ -49,6 +49,23 @@ public class PingModelTest
 	}
 
 	@Test
+	public void minuteLongPingAppearsPromptlyHoldsAndExpiresAtItsFullLifetime()
+	{
+		PingStore store = new PingStore();
+		assertTrue(store.add("long", 1, PingType.GO, TILE, 0, 60000));
+		ActivePing ping = store.getActive().get(0);
+		assertTrue(PingAnimation.opacity(ping.visualProgress(100_000_000L)) > 0.9);
+		assertEquals(0.52, ping.visualProgress(1_000_000_000L), 0.00001);
+		assertEquals(0.52, ping.visualProgress(30_000_000_000L), 0.00001);
+		assertTrue(ping.visualProgress(59_600_000_000L) > 0.52);
+		store.prune(59_999_000_000L);
+		assertEquals(1, store.getActive().size());
+		assertEquals(1, ping.visualProgress(60_000_000_000L), 0);
+		store.prune(60_000_000_000L);
+		assertTrue(store.getActive().isEmpty());
+	}
+
+	@Test
 	public void deduplicationRateLimitsAndExpiry()
 	{
 		PingStore store = new PingStore();

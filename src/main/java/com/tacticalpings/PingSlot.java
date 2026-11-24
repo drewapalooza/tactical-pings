@@ -27,6 +27,23 @@ public enum PingSlot
 		return legacyType;
 	}
 
+	public String getConfigPrefix()
+	{
+		switch (this)
+		{
+			case ONE:
+				return "flee";
+			case TWO:
+				return "go";
+			case THREE:
+				return "attack";
+			case FOUR:
+				return "use";
+			default:
+				return "ping" + (ordinal() + 1);
+		}
+	}
+
 	public PingStyle getDefaultStyle()
 	{
 		switch (this)

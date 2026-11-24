@@ -6,7 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.IdentityHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
 import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.swing.SwingUtilities;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.MenuAction;
@@ -25,12 +30,15 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.PartyChanged;
+import net.runelite.client.events.ProfileChanged;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
 import net.runelite.client.party.WSClient;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
+import net.runelite.client.ui.ClientToolbar;
+import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ColorUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +77,13 @@ public class TacticalPingsPlugin extends Plugin
 	private PingTargetResolver resolver;
 	@Inject
 	private PingTargets targets;
+	@Inject
+	private ClientToolbar toolbar;
+	@Inject
+	private Provider<PingSettingsPanel> settingsProvider;
+	private PingSettingsPanel settingsPanel;
+	private NavigationButton navigation;
+	private final AtomicLong uiGeneration = new AtomicLong();
 	private final PingStore store = new PingStore();
 	private final Map<MenuEntry, PingSlot> pingMenus = new IdentityHashMap<>();
 	private volatile boolean running;
@@ -93,12 +108,37 @@ public class TacticalPingsPlugin extends Plugin
 		overlayManager.add(wheelOverlay);
 		audio.start();
 		input.start();
+		long uiToken = uiGeneration.incrementAndGet();
+		SwingUtilities.invokeLater(() ->
+		{
+			if (running && uiGeneration.get() == uiToken)
+			{
+				settingsPanel = settingsProvider.get();
+				navigation = NavigationButton.builder().tooltip("Ayra's Pings settings")
+					.icon(navigationIcon()).priority(8).panel(settingsPanel).build();
+				toolbar.addNavigation(navigation);
+			}
+		});
 	}
 
 	@Override
 	protected void shutDown()
 	{
 		running = false;
+		uiGeneration.incrementAndGet();
+		SwingUtilities.invokeLater(() ->
+		{
+			if (navigation != null)
+			{
+				toolbar.removeNavigation(navigation);
+				navigation = null;
+			}
+			if (settingsPanel != null)
+			{
+				settingsPanel.close();
+				settingsPanel = null;
+			}
+		});
 		pingMenus.clear();
 		long token = lifecycle.incrementAndGet();
 		input.stop();
@@ -168,7 +208,35 @@ public class TacticalPingsPlugin extends Plugin
 		if (TacticalPingsConfig.GROUP.equals(event.getGroup()))
 		{
 			input.focusLost();
+			refreshSettings();
 		}
+	}
+
+	@Subscribe
+	public void onProfileChanged(ProfileChanged event)
+	{
+		refreshSettings();
+	}
+
+	private void refreshSettings()
+	{
+		SwingUtilities.invokeLater(() ->
+		{
+			if (running && settingsPanel != null)
+			{
+				settingsPanel.refresh();
+			}
+		});
+	}
+
+	private static BufferedImage navigationIcon()
+	{
+		BufferedImage image = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D graphics = image.createGraphics();
+		PingPainter.paint(graphics, (x, y) -> new Point2D.Double(16 + x * 9 - y * 6, 16 + x * 4 + y * 6),
+			PingType.GO, 0.46, false, false);
+		graphics.dispose();
+		return image;
 	}
 
 	@Subscribe
@@ -312,7 +380,7 @@ public class TacticalPingsPlugin extends Plugin
 	private boolean accept(TacticalPingMessage message, long memberId, PingOutline outline, PingStyle style)
 	{
 		if (!store.add(message.getId(), memberId, message.getType(), message.getPoint(),
-			System.nanoTime(), Math.max(800, Math.min(3000, config.durationMillis())), outline, style))
+			System.nanoTime(), Math.max(800, Math.min(60000, config.durationMillis())), outline, style))
 		{
 			return false;
 		}

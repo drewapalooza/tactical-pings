@@ -31,6 +31,10 @@ Incoming messages require current party membership, matching world/plane/loaded 
 
 Design data is a bounded optional protocol-1 extension. RGB values are restricted to 24-bit color, symbol/sound IDs resolve only to bundled enums, and text is limited to 64 Unicode code points without invisible controls or line breaks. Text is literal Java2D text; menu brackets are escaped. Missing, malformed or unknown designs use the original action design. Slots 5–8 retain a legacy Go action for older clients. No audio files, images, arbitrary asset paths or URLs are sent or loaded.
 
+The sidebar uses collapsible groups for general settings and creates customization accordions only for enabled slots. The native configuration also groups general settings into four accordions; design fields remain persisted but hidden there, with no empty slot sections. Changing the count updates the sidebar and quick-click options immediately without resetting disabled designs. Own-group ConfigManager writes and public ClientToolbar/ColorPickerManager APIs are used; there is no reflection or modification of another plugin's UI.
+
+Ping lifetimes are clamped to 800–60,000 ms on each receiving client. Long lifetimes use a prompt entrance and exit with a stationary hold, while the store still expires them at their full configured lifetime. Existing scene/party/despawn cleanup and bounded active markers remain in place.
+
 The local wheel count does not restrict receiving slots from other players. Recipients may override sender designs with their own corresponding slot designs. Volume, mute, scene labels, reduced motion and outlines remain local controls. The wheel uses equal clockwise sectors: two halves, four quadrants, or two sectors per quadrant for eight. Counts 1–8 and configured quick-click slots are clamped; disabled slots cannot be sent.
 
 ## Build, resources and validation
@@ -44,7 +48,7 @@ The local wheel count does not restrict receiving slots from other players. Reci
 
 Validation on 2026-11-24:
 
-- 67 automated tests covering animation, target identity/expiry, packet validation/isolation/deduplication, scene lifecycle, minimap layouts/rotation/zoom, input priming/cancellation/immediate drag, dependency wiring, all eight wheel counts, shared design/slot round trips and fallbacks, text validation, listener overrides, audio controls and all bundled chimes.
+- 76 automated tests covering animation, target identity/expiry, packet validation/isolation/deduplication, scene lifecycle, minimap layouts/rotation/zoom, input priming/cancellation/immediate drag, dependency wiring, all eight wheel counts, shared design/slot round trips and fallbacks, text validation, listener overrides, audio controls and all bundled chimes, conditional settings panels and saved values, accordion state, toolbar lifecycle, and minute-long ping expiry/animation.
 - Production compilation using the official standard-build dependency list against the Hub's RuneLite version, 1.13.8.
 - Compatibility checks against RuneLite 1.13.7.
 - Offline rendering using the actual Java painter. The user has reported successful sideload testing of the earlier 1.1.0 release; the new customization is covered by automated client fixtures.

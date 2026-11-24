@@ -3,13 +3,15 @@
 
 Manual, temporary team pings for RuneLite: choose **1–8 wheel slots**, each with a color picker, a symbol and sound from the bundled libraries, and your own text. Pings highlight the clicked tile with a circular ripple that expands, returns and fades.
 
-Click an NPC, player, world object or visible dropped item when pinging and its model border pulses in the ping color, then fades with the ripple. The selected entity is fixed at mouse-down; dragging over something else does not change it. Moving actors keep their outline for that ping's short lifetime. Despawns, replacement entities and scene changes clear the outline. Ground items must be among the models already rendered in the item pile; hidden/unrendered drops are not revealed. Inventory widgets remain normal inventory clicks.
+Click an NPC, player, world object or visible dropped item when pinging and its model border pulses in the ping color, then fades with the ripple. The selected entity is fixed at mouse-down; dragging over something else does not change it. Moving actors keep their outline for that ping's configured lifetime. Despawns, replacement entities and scene changes clear the outline. Ground items must be among the models already rendered in the item pile; hidden/unrendered drops are not revealed. Inventory widgets remain normal inventory clicks.
 
 ![The actual Java renderer and ping wheel](docs/renderer.png)
 
 ## Your wheel and designs
 
-Set **Ping count** from **1 to 8**. Only the first selected number of slots appear on your wheel and in the ground context menu. Each slot has its own settings group; the first four retain the original Flee, Go, Attack and Use defaults.
+Open the **Ayra's Pings settings** sidebar button (the green ripple icon). General settings are grouped into **Wheel & timing**, **Controls**, **Party & sound**, and **Visuals** accordions. The standard plugin settings also group these general controls into accordions.
+
+Set **Ping count** from **1 to 8**. Only enabled slots appear in the sidebar's **Your pings** section, your wheel, the quick-click choices and the ground menu. Five enabled slots means exactly five customization accordions. Reducing the count keeps disabled slots' saved designs so they return when re-enabled. The first four retain the original Flee, Go, Attack and Use defaults.
 
 - **1:** one action in the center.
 - **2:** a vertical divider makes right and left halves.
@@ -18,7 +20,7 @@ Set **Ping count** from **1 to 8**. Only the first selected number of slots appe
 
 Slots run clockwise from the top boundary. With four slots, Ping 1 is northeast, Ping 2 southeast, Ping 3 southwest and Ping 4 northwest. **Quick-click ping** chooses the slot sent without dragging; its default is Ping 2 (Go). If that slot is disabled, quick-click uses Ping 1.
 
-Open a **Ping 1–8** settings group to choose:
+Expand an enabled **Ping 1–8** accordion in the sidebar to choose:
 
 - **Color:** RuneLite's RGB color picker. The exact RGB value is shared.
 - **Symbol:** exclamation point, arrow, crosshair, diamond, question mark, flag, star or shield.
@@ -26,6 +28,8 @@ Open a **Ping 1–8** settings group to choose:
 - **Sound:** Falling warning, Rising chime, Triple strike, Bright double chime, Bell, Sonar, Chirp, Soft chord, or Silent. All eight original chimes ship with every installation; there are no uploads or runtime downloads.
 
 ![Actual Java renderers showing wheel sizes and custom designs](docs/customization.png)
+
+![Actual Swing settings panel with only 5, 2 or 8 enabled ping editors](docs/settings.png)
 
 | Slot | Default color | Default text | Symbol | Chime |
 | --- | --- | --- | --- | --- |
@@ -46,7 +50,7 @@ Hold **Alt**, press the left mouse button on a **scene tile or the visible minim
 
 You can also right-click a ground tile and choose an enabled **Ping 1–8** entry with its custom text and color. These entries sit below **Walk here**, preserving ordinary left-click behavior. They only create a ping; they do not walk, attack, use an item, change a target, or send an OSRS game action.
 
-Default lifetime is **1.6 seconds**, configurable from 0.8 to 3 seconds. Sound, independent volume, minimap ripples, scene labels, sharing and receiving can be configured separately. Scene labels default to enabled; an existing saved preference is preserved. Reduced motion replaces the moving ripple with a stationary fading tile and ring. Symbols distinguish actions without relying only on color.
+Default lifetime is **1.6 seconds**, configurable from **0.8 to 60 seconds**. The sidebar's **Duration (sec)** field accepts up to 60.0; the standard settings use milliseconds, up to 60,000. Long pings appear promptly, hold their marker, then return and fade at the end. Lifetime is local: each receiving client uses its own duration setting. Sound, independent volume, minimap ripples, scene labels, sharing and receiving can be configured separately. Scene labels default to enabled; an existing saved preference is preserved. Reduced motion replaces the moving ripple with a stationary fading tile and ring. Symbols distinguish actions without relying only on color.
 
 **Clicked-target outlines** controls the pulsing border. Reduced motion also makes the target border steady before its final fade. Press-and-drag can begin immediately: target capture and release are queued in order using the saved mouse-down position, with no required hold delay.
 
@@ -79,7 +83,7 @@ Use JDK 11 or newer (development checks used JDK 17). The wrapper verifies the G
 
 `run` starts standard RuneLite in developer mode with this plugin registered. Enable **Ayra's Pings** in its settings. `preview` renders the actual Java painter onto a synthetic floor, producing `build/previews/renderer.png`. No login is needed for the automated tests or preview.
 
-The plugin JAR is `build/libs/tactical-pings-1.2.0.jar`. A compatible client's existing sideload loader can load this JAR; standard RuneLite Plugin Hub distribution follows the source-review process below. For a client on a known older API, build and test with a quoted override, for example:
+The plugin JAR is `build/libs/tactical-pings-1.3.0.jar`. A compatible client's existing sideload loader can load this JAR; standard RuneLite Plugin Hub distribution follows the source-review process below. For a client on a known older API, build and test with a quoted override, for example:
 
 ```powershell
 .\gradlew.bat test jar '-PruneliteVersion=1.13.7'

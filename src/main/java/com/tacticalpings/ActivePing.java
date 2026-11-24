@@ -57,4 +57,21 @@ public final class ActivePing
 	{
 		return Math.max(0, Math.min(1, (double) (nowNanos - startedNanos) / durationNanos));
 	}
+
+	/** Long lifetimes keep a prompt entrance and exit instead of a minute-long slow fade-in. */
+	public double visualProgress(long nowNanos)
+	{
+		if (durationNanos <= 3_000_000_000L)
+		{
+			return progress(nowNanos);
+		}
+		long age = Math.max(0, nowNanos - startedNanos);
+		long transition = 800_000_000L;
+		if (age < transition)
+		{
+			return 0.52 * age / transition;
+		}
+		long remaining = durationNanos - age;
+		return remaining > transition ? 0.52 : Math.min(1, 0.52 + 0.48 * (1 - (double) remaining / transition));
+	}
 }
