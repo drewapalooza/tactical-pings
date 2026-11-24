@@ -6,6 +6,7 @@ import net.runelite.api.coords.WorldPoint;
 public final class ActivePing
 {
 	private final PingType type;
+	private final PingStyle style;
 	private final WorldPoint point;
 	private final long startedNanos;
 	private final long durationNanos;
@@ -18,7 +19,14 @@ public final class ActivePing
 
 	public ActivePing(PingType type, WorldPoint point, long startedNanos, int durationMillis, PingOutline outline)
 	{
+		this(type, point, startedNanos, durationMillis, outline, PingStyle.defaults(type));
+	}
+
+	public ActivePing(PingType type, WorldPoint point, long startedNanos, int durationMillis,
+		PingOutline outline, PingStyle style)
+	{
 		this.type = type;
+		this.style = style;
 		this.point = point;
 		this.startedNanos = startedNanos;
 		durationNanos = durationMillis * 1_000_000L;
@@ -33,6 +41,11 @@ public final class ActivePing
 	public PingType getType()
 	{
 		return type;
+	}
+
+	public PingStyle getStyle()
+	{
+		return style;
 	}
 
 	public WorldPoint getPoint()

@@ -147,7 +147,7 @@ public class PingTargets
 		{
 			return;
 		}
-		Color color = ping.getType().getColor();
+		Color color = ping.getStyle().getColor();
 		outline.draw(renderer, new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha), 2 + (int) Math.round(pulse * 2));
 	}
 

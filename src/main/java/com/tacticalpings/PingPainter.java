@@ -27,6 +27,12 @@ public final class PingPainter
 	public static void paint(Graphics2D graphics, Projection projection, PingType type,
 		double progress, boolean reducedMotion, boolean label)
 	{
+		paint(graphics, projection, PingStyle.defaults(type), progress, reducedMotion, label);
+	}
+
+	public static void paint(Graphics2D graphics, Projection projection, PingStyle style,
+		double progress, boolean reducedMotion, boolean label)
+	{
 		double opacity = PingAnimation.opacity(progress);
 		Point2D center = projection.project(0, 0);
 		if (center == null || opacity <= 0)
@@ -37,7 +43,7 @@ public final class PingPainter
 		try
 		{
 			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			Color color = type.getColor();
+			Color color = style.getColor();
 			Path2D tile = tile(projection);
 			if (tile != null)
 			{
@@ -63,16 +69,16 @@ public final class PingPainter
 			}
 			Point2D edge = projection.project(0.5, 0.5);
 			double size = edge == null ? 11 : Math.max(7, Math.min(15, center.distance(edge) * 0.37));
-			glyph(g, type, center.getX(), center.getY(), size, opacity);
-			if (label)
+			glyph(g, style, center.getX(), center.getY(), size, opacity);
+			if (label && !style.getText().isEmpty())
 			{
 				g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));
-				int x = (int) center.getX() - g.getFontMetrics().stringWidth(type.getLabel()) / 2;
+				int x = (int) center.getX() - g.getFontMetrics().stringWidth(style.getText()) / 2;
 				int y = (int) (center.getY() + size + 16);
 				g.setColor(alpha(Color.BLACK, 200 * opacity));
-				g.drawString(type.getLabel(), x + 1, y + 1);
+				g.drawString(style.getText(), x + 1, y + 1);
 				g.setColor(alpha(color, 240 * opacity));
-				g.drawString(type.getLabel(), x, y);
+				g.drawString(style.getText(), x, y);
 			}
 		}
 		finally
@@ -83,26 +89,31 @@ public final class PingPainter
 
 	public static void glyph(Graphics2D g, PingType type, double x, double y, double size, double opacity)
 	{
+		glyph(g, PingStyle.defaults(type), x, y, size, opacity);
+	}
+
+	public static void glyph(Graphics2D g, PingStyle style, double x, double y, double size, double opacity)
+	{
 		Graphics2D icon = (Graphics2D) g.create();
 		try
 		{
 			icon.translate(x, y);
 			icon.scale(size / 12, size / 12);
 			Path2D path = new Path2D.Double();
-			switch (type)
+			switch (style.getSymbol())
 			{
-				case FLEE:
+				case EXCLAMATION:
 					path.moveTo(0, -9);
 					path.lineTo(0, 3);
 					break;
-				case GO:
+				case ARROW:
 					path.moveTo(0, -9);
 					path.lineTo(0, 8);
 					path.moveTo(-6, 2);
 					path.lineTo(0, 8);
 					path.lineTo(6, 2);
 					break;
-				case ATTACK:
+				case CROSSHAIR:
 					path.append(new Ellipse2D.Double(-7, -7, 14, 14), false);
 					path.moveTo(-11, 0);
 					path.lineTo(-4, 0);
@@ -113,11 +124,47 @@ public final class PingPainter
 					path.moveTo(0, 4);
 					path.lineTo(0, 11);
 					break;
-				case USE:
+				case DIAMOND:
 					path.moveTo(0, -9);
 					path.lineTo(9, 0);
 					path.lineTo(0, 9);
 					path.lineTo(-9, 0);
+					path.closePath();
+					break;
+				case QUESTION:
+					path.moveTo(-6, -5);
+					path.curveTo(-6, -13, 8, -12, 7, -4);
+					path.curveTo(7, 0, 0, 0, 0, 4);
+					break;
+				case FLAG:
+					path.moveTo(-6, 10);
+					path.lineTo(-6, -10);
+					path.lineTo(8, -10);
+					path.lineTo(4, -4);
+					path.lineTo(8, 2);
+					path.lineTo(-6, 2);
+					break;
+				case STAR:
+					for (int i = 0; i < 10; i++)
+					{
+						double angle = -Math.PI / 2 + i * Math.PI / 5;
+						double radius = i % 2 == 0 ? 10 : 4.5;
+						if (i == 0)
+						{
+							path.moveTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+						}
+						else
+						{
+							path.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+						}
+					}
+					path.closePath();
+					break;
+				case SHIELD:
+					path.moveTo(0, -10);
+					path.lineTo(9, -6);
+					path.curveTo(9, 4, 6, 7, 0, 11);
+					path.curveTo(-6, 7, -9, 4, -9, -6);
 					path.closePath();
 					break;
 			}
@@ -125,11 +172,12 @@ public final class PingPainter
 			icon.setColor(alpha(Color.BLACK, 130 * opacity));
 			icon.draw(path);
 			icon.setStroke(new BasicStroke(2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-			icon.setColor(alpha(type.getColor().brighter(), 255 * opacity));
+			icon.setColor(alpha(style.getColor().brighter(), 255 * opacity));
 			icon.draw(path);
-			if (type == PingType.FLEE || type == PingType.ATTACK)
+			if (style.getSymbol() == PingSymbol.EXCLAMATION || style.getSymbol() == PingSymbol.CROSSHAIR
+				|| style.getSymbol() == PingSymbol.QUESTION)
 			{
-				double dotY = type == PingType.FLEE ? 8 : 0;
+				double dotY = style.getSymbol() == PingSymbol.CROSSHAIR ? 0 : 8;
 				icon.fill(new Ellipse2D.Double(-1.6, dotY - 1.6, 3.2, 3.2));
 			}
 		}

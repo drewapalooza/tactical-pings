@@ -21,6 +21,8 @@ public class TacticalPingMessage extends PartyMemberMessage
 	private int templatePlane;
 	private long sentAt;
 	private PingTarget target;
+	private PingStyleData style;
+	private Integer slot;
 
 	public TacticalPingMessage()
 	{
@@ -48,7 +50,7 @@ public class TacticalPingMessage extends PartyMemberMessage
 	{
 		return version == 1 && id != null && id.length() == 36
 			&& id.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
-			&& getType() != null && world > 0 && world <= 65535
+			&& getType() != null && validSlot() && world > 0 && world <= 65535
 			&& validPoint(x, y, plane) && validPoint(templateX, templateY, templatePlane)
 			&& (target == null || target.isValid())
 			&& sentAt >= now - 10000 && sentAt <= now + 30000;
@@ -62,6 +64,34 @@ public class TacticalPingMessage extends PartyMemberMessage
 	public void setTarget(PingTarget target)
 	{
 		this.target = target;
+	}
+
+	public void setStyle(PingStyle style)
+	{
+		this.style = style == null ? null : new PingStyleData(style);
+	}
+
+	public PingStyle getStyle()
+	{
+		return style == null ? PingStyle.defaults(getType()) : style.resolve(getType());
+	}
+
+	public TacticalPingMessage(PingSlot slot, int world, WorldPoint point,
+		boolean instanced, WorldPoint template, long sentAt)
+	{
+		this(slot.getLegacyType(), world, point, instanced, template, sentAt);
+		this.slot = slot.ordinal();
+	}
+
+	private boolean validSlot()
+	{
+		return slot == null || (slot >= 0 && slot < PingSlot.values().length
+			&& PingSlot.values()[slot].getLegacyType() == getType());
+	}
+
+	public PingSlot getSlot()
+	{
+		return slot == null ? PingSlot.fromType(getType()) : PingSlot.values()[slot];
 	}
 
 	private static boolean validPoint(int x, int y, int plane)

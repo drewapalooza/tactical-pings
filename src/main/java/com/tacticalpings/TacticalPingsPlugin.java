@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 @PluginDescriptor(
 	name = "Ayra's Pings",
-	description = "Share manual flee, go, attack and use tile pings with your RuneLite party",
+	description = "Share 1-8 customizable tile pings with your RuneLite party",
 	tags = {"party", "ping", "tile", "team", "communication", "ripple"}
 )
 public class TacticalPingsPlugin extends Plugin
@@ -70,7 +70,7 @@ public class TacticalPingsPlugin extends Plugin
 	@Inject
 	private PingTargets targets;
 	private final PingStore store = new PingStore();
-	private final Map<MenuEntry, PingType> pingMenus = new IdentityHashMap<>();
+	private final Map<MenuEntry, PingSlot> pingMenus = new IdentityHashMap<>();
 	private volatile boolean running;
 	private final AtomicLong lifecycle = new AtomicLong();
 
@@ -188,15 +188,17 @@ public class TacticalPingsPlugin extends Plugin
 		// Freeze the menu's tile; moving the mouse over a menu must not move the ping.
 		WorldPoint point = tile.getWorldLocation();
 		pingMenus.clear();
-		for (PingType type : PingType.values())
+		for (int i = 0; i < PingWheelLayout.count(config.pingCount()); i++)
 		{
+			PingSlot slot = PingSlot.values()[i];
+			PingStyle style = PingStyle.fromConfig(config, slot);
 			// Below Walk here: ordinary left-click must retain its original action.
 			MenuEntry pingEntry = client.createMenuEntry(1)
-				.setOption("Ping")
-				.setTarget(ColorUtil.wrapWithColorTag(type.getLabel(), type.getColor()))
+				.setOption(slot.toString())
+				.setTarget(ColorUtil.wrapWithColorTag(style.getMenuText(), style.getColor()))
 				.setType(MenuAction.RUNELITE)
-				.onClick(entry -> sendPing(point, type));
-			pingMenus.put(pingEntry, type);
+				.onClick(entry -> sendPing(point, slot));
+			pingMenus.put(pingEntry, slot);
 		}
 	}
 
@@ -220,36 +222,38 @@ public class TacticalPingsPlugin extends Plugin
 		PingSelection frozen = selected;
 		for (MenuEntry entry : entries)
 		{
-			PingType type = pingMenus.get(entry);
-			if (type != null)
+			PingSlot slot = pingMenus.get(entry);
+			if (slot != null)
 			{
-				entry.onClick(clicked -> sendSelection(frozen, type));
+				entry.onClick(clicked -> sendSelection(frozen, slot));
 			}
 		}
 	}
 
-	void sendPing(WorldPoint point, PingType type)
+	void sendPing(WorldPoint point, PingSlot slot)
 	{
-		sendSelection(new PingSelection(point, null), type);
+		sendSelection(new PingSelection(point, null), slot);
 	}
 
-	void sendSelection(PingSelection selection, PingType type)
+	void sendSelection(PingSelection selection, PingSlot slot)
 	{
 		WorldPoint point = selection.getPoint();
-		if (!running || !canShow(point))
+		if (!running || slot == null || slot.ordinal() >= PingWheelLayout.count(config.pingCount()) || !canShow(point))
 		{
 			return;
 		}
 		WorldView view = client.getTopLevelWorldView();
 		LocalPoint local = LocalPoint.fromWorld(view, point);
 		WorldPoint template = WorldPoint.fromLocalInstance(client, local, point.getPlane());
-		TacticalPingMessage message = new TacticalPingMessage(type, client.getWorld(), point,
+		TacticalPingMessage message = new TacticalPingMessage(slot, client.getWorld(), point,
 			view.isInstance(), template, System.currentTimeMillis());
+		PingStyle style = PingStyle.fromConfig(config, slot);
+		message.setStyle(style);
 		PingOutline outline = targets.present(selection.getOutline(), point) ? selection.getOutline() : null;
 		message.setTarget(outline == null ? null : outline.getTarget());
 		PartyMember self = party.getLocalMember();
 		long memberId = self == null ? 0 : self.getMemberId();
-		if (!accept(message, memberId, outline))
+		if (!accept(message, memberId, outline, style))
 		{
 			return;
 		}
@@ -293,7 +297,8 @@ public class TacticalPingsPlugin extends Plugin
 			{
 				return;
 			}
-			accept(message, message.getMemberId(), targets.resolve(message.getTarget(), message.getPoint()));
+			PingStyle style = config.sharedDesigns() ? message.getStyle() : PingStyle.fromConfig(config, message.getSlot());
+			accept(message, message.getMemberId(), targets.resolve(message.getTarget(), message.getPoint()), style);
 		});
 	}
 
@@ -304,14 +309,14 @@ public class TacticalPingsPlugin extends Plugin
 			&& point.getPlane() == view.getPlane() && LocalPoint.fromWorld(view, point) != null;
 	}
 
-	private boolean accept(TacticalPingMessage message, long memberId, PingOutline outline)
+	private boolean accept(TacticalPingMessage message, long memberId, PingOutline outline, PingStyle style)
 	{
 		if (!store.add(message.getId(), memberId, message.getType(), message.getPoint(),
-			System.nanoTime(), Math.max(800, Math.min(3000, config.durationMillis())), outline))
+			System.nanoTime(), Math.max(800, Math.min(3000, config.durationMillis())), outline, style))
 		{
 			return false;
 		}
-		audio.play(message.getType());
+		audio.play(style.getSound());
 		return true;
 	}
 }

@@ -2,7 +2,6 @@
 package com.tacticalpings;
 
 import java.io.IOException;
-import java.util.Locale;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.inject.Inject;
@@ -43,24 +42,25 @@ public class PingAudio
 		generation.incrementAndGet();
 	}
 
-	public void play(PingType type)
+	public void play(PingSound sound)
 	{
 		int volume = Math.max(0, Math.min(100, config.volume()));
-		if (!running || !config.sounds() || volume == 0)
+		if (!running || !config.sounds() || volume == 0 || sound == null || sound == PingSound.SILENT)
 		{
 			return;
 		}
 		long token = generation.get();
-		float gain = (float) (20 * Math.log10(volume / 100.0));
 		executor.execute(() ->
 		{
-			if (!running || generation.get() != token || !config.sounds() || config.volume() == 0)
+			int playbackVolume = Math.max(0, Math.min(100, config.volume()));
+			if (!running || generation.get() != token || !config.sounds() || playbackVolume == 0)
 			{
 				return;
 			}
 			try
 			{
-				audioPlayer.play(PingAudio.class, type.name().toLowerCase(Locale.ROOT) + ".wav", gain);
+				float gain = (float) (20 * Math.log10(playbackVolume / 100.0));
+				audioPlayer.play(PingAudio.class, sound.getResource(), gain);
 			}
 			catch (IOException | UnsupportedAudioFileException | LineUnavailableException | IllegalArgumentException ex)
 			{

@@ -4,7 +4,6 @@ package com.tacticalpings;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -16,14 +15,18 @@ import static org.junit.Assert.assertTrue;
 public class ChimeResourceTest
 {
 	@Test
-	public void fourDistinctChimesAreBundledReadableAndNotClipped() throws Exception
+	public void allLibraryChimesAreBundledReadableAndNotClipped() throws Exception
 	{
 		Set<Integer> hashes = new HashSet<>();
-		for (PingType type : PingType.values())
+		for (PingSound sound : PingSound.values())
 		{
-			try (InputStream resource = PingAudio.class.getResourceAsStream(type.name().toLowerCase(Locale.ROOT) + ".wav"))
+			if (sound == PingSound.SILENT)
 			{
-				assertNotNull(type.name(), resource);
+				continue;
+			}
+			try (InputStream resource = PingAudio.class.getResourceAsStream(sound.getResource()))
+			{
+				assertNotNull(sound.name(), resource);
 				try (AudioInputStream audio = AudioSystem.getAudioInputStream(new BufferedInputStream(resource)))
 				{
 					assertEquals(44100, audio.getFormat().getSampleRate(), 0);
@@ -42,5 +45,6 @@ public class ChimeResourceTest
 				}
 			}
 		}
+		assertEquals(8, hashes.size());
 	}
 }

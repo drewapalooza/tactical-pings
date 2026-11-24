@@ -62,11 +62,11 @@ public class MinimapPingOverlay extends Overlay
 				}
 				double t = ping.progress(now);
 				double radius = config.reducedMotion() ? 9 : 3 + 10 * PingAnimation.radius(t);
-				g.setColor(new java.awt.Color(ping.getType().getColor().getRed(), ping.getType().getColor().getGreen(),
-					ping.getType().getColor().getBlue(), (int) (230 * PingAnimation.opacity(t))));
+				g.setColor(new java.awt.Color(ping.getStyle().getColor().getRed(), ping.getStyle().getColor().getGreen(),
+					ping.getStyle().getColor().getBlue(), (int) (230 * PingAnimation.opacity(t))));
 				g.setStroke(new BasicStroke(1.5f));
 				g.draw(new Ellipse2D.Double(point.getX() - radius, point.getY() - radius, radius * 2, radius * 2));
-				PingPainter.glyph(g, ping.getType(), point.getX(), point.getY(), 5, PingAnimation.opacity(t));
+				PingPainter.glyph(g, ping.getStyle(), point.getX(), point.getY(), 5, PingAnimation.opacity(t));
 			}
 		}
 		finally

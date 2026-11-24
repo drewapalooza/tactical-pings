@@ -75,6 +75,7 @@ public final class PingPreview
 			PingType.GO, 0.46, false, false);
 		ig.dispose();
 		ImageIO.write(icon, "png", new File(directory, "icon.png"));
+		PingCustomizationPreview.main(args);
 	}
 
 	private static Point2D project(double x, double y, double cx, double cy)
@@ -82,7 +83,7 @@ public final class PingPreview
 		return new Point2D.Double(cx + x * 43 - y * 34, cy + x * 23 + y * 28);
 	}
 
-	private static void drawFloor(Graphics2D g, int cx, int cy)
+	static void drawFloor(Graphics2D g, int cx, int cy)
 	{
 		g.setColor(new Color(38, 40, 37));
 		g.fillRect(0, 0, 400, 250);

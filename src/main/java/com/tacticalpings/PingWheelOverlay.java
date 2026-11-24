@@ -9,6 +9,8 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Line2D;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.client.ui.overlay.Overlay;
@@ -21,6 +23,8 @@ public class PingWheelOverlay extends Overlay
 	private Client client;
 	@Inject
 	private PingInput input;
+	@Inject
+	private TacticalPingsConfig config;
 
 	@Inject
 	PingWheelOverlay()
@@ -37,9 +41,11 @@ public class PingWheelOverlay extends Overlay
 		if (wheel != null)
 		{
 			Point cursor = input.getCursor();
-			int x = Math.max(106, Math.min(client.getCanvasWidth() - 106, wheel.origin.x));
-			int y = Math.max(100, Math.min(client.getCanvasHeight() - 100, wheel.origin.y));
-			paint(graphics, x, y, PingInput.choose(cursor.x - wheel.origin.x, cursor.y - wheel.origin.y));
+			int inset = PingWheelLayout.radius(wheel.count) + 6;
+			int x = Math.max(inset, Math.min(client.getCanvasWidth() - inset, wheel.origin.x));
+			int y = Math.max(inset, Math.min(client.getCanvasHeight() - inset, wheel.origin.y));
+			paint(graphics, x, y, PingWheelLayout.choose(cursor.x - wheel.origin.x,
+				cursor.y - wheel.origin.y, wheel.count, wheel.quick), wheel.count, config);
 		}
 		else if (input.isArmed())
 		{
@@ -75,38 +81,82 @@ public class PingWheelOverlay extends Overlay
 
 	static void paint(Graphics2D graphics, int x, int y, PingType selected)
 	{
+		paint(graphics, x, y, PingSlot.fromType(selected), 4, new TacticalPingsConfig() {});
+	}
+
+	static void paint(Graphics2D graphics, int x, int y, PingSlot selected, int requested, TacticalPingsConfig config)
+	{
 		Graphics2D g = (Graphics2D) graphics.create();
 		try
 		{
+			int count = PingWheelLayout.count(requested);
+			int radius = PingWheelLayout.radius(count);
 			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 			g.setColor(new Color(12, 16, 22, 225));
-			g.fill(new Ellipse2D.Double(x - 86, y - 86, 172, 172));
+			g.fill(new Ellipse2D.Double(x - radius, y - radius, radius * 2, radius * 2));
 			g.setColor(new Color(135, 150, 165, 75));
 			g.setStroke(new BasicStroke(1));
-			g.draw(new Ellipse2D.Double(x - 86, y - 86, 172, 172));
-			int[][] positions = {{0, -54}, {54, 0}, {0, 54}, {-54, 0}};
-			PingType[] types = PingType.values();
-			for (int i = 0; i < types.length; i++)
+			g.draw(new Ellipse2D.Double(x - radius, y - radius, radius * 2, radius * 2));
+			for (int i = 0; i < count; i++)
 			{
-				PingType type = types[i];
-				int px = x + positions[i][0];
-				int py = y + positions[i][1];
-				if (type == selected)
+				PingSlot slot = PingSlot.values()[i];
+				PingStyle style = PingStyle.fromConfig(config, slot);
+				if (slot == selected)
 				{
-					g.setColor(new Color(type.getColor().getRed(), type.getColor().getGreen(), type.getColor().getBlue(), 40));
-					g.fill(new Ellipse2D.Double(px - 25, py - 24, 50, 48));
+					g.setColor(new Color(style.getColor().getRed(), style.getColor().getGreen(), style.getColor().getBlue(), 38));
+					g.fill(new Arc2D.Double(x - radius, y - radius, radius * 2, radius * 2,
+						90 - i * 360.0 / count, -360.0 / count, Arc2D.PIE));
+					g.setColor(style.getColor());
+					g.setStroke(new BasicStroke(2));
+					g.draw(new Arc2D.Double(x - radius, y - radius, radius * 2, radius * 2,
+						90 - i * 360.0 / count, -360.0 / count, Arc2D.OPEN));
 				}
-				PingPainter.glyph(g, type, px, py - 4, 10, type == selected ? 1 : 0.65);
+				if (count > 1)
+				{
+					double boundary = -Math.PI / 2 + i * Math.PI * 2 / count;
+					g.setColor(new Color(135, 150, 165, 65));
+					g.setStroke(new BasicStroke(1));
+					g.draw(new Line2D.Double(x + Math.cos(boundary) * 19, y + Math.sin(boundary) * 19,
+						x + Math.cos(boundary) * radius, y + Math.sin(boundary) * radius));
+				}
+				double angle = PingWheelLayout.angle(i, count);
+				double distance = count == 1 ? 0 : radius * 0.64;
+				int px = x + (int) Math.round(Math.cos(angle) * distance);
+				int py = y + (int) Math.round(Math.sin(angle) * distance);
+				PingPainter.glyph(g, style, px, py - 4, 11, slot == selected ? 1 : 0.65);
 				g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 10));
-				g.setColor(type == selected ? type.getColor() : new Color(175, 183, 190));
-				g.drawString(type.getLabel(), px - g.getFontMetrics().stringWidth(type.getLabel()) / 2, py + 17);
+				g.setColor(slot == selected ? style.getColor() : new Color(175, 183, 190));
+				String label = wheelText(g, style.getText(), count > 4 ? 60 : 78);
+				g.drawString(label, px - g.getFontMetrics().stringWidth(label) / 2, py + 17);
 			}
-			g.setColor(new Color(185, 193, 202));
-			g.fill(new Ellipse2D.Double(x - 2, y - 2, 4, 4));
+			if (count > 1)
+			{
+				g.setColor(new Color(12, 16, 22));
+				g.fill(new Ellipse2D.Double(x - 18, y - 18, 36, 36));
+				g.setColor(new Color(135, 150, 165, 75));
+				g.setStroke(new BasicStroke(1));
+				g.draw(new Ellipse2D.Double(x - 18, y - 18, 36, 36));
+				g.setColor(new Color(185, 193, 202));
+				g.fill(new Ellipse2D.Double(x - 2, y - 2, 4, 4));
+			}
 		}
 		finally
 		{
 			g.dispose();
 		}
+	}
+
+	private static String wheelText(Graphics2D g, String text, int maxWidth)
+	{
+		if (g.getFontMetrics().stringWidth(text) <= maxWidth)
+		{
+			return text;
+		}
+		int end = text.length();
+		while (end > 0 && g.getFontMetrics().stringWidth(text.substring(0, end) + "\u2026") > maxWidth)
+		{
+			end = text.offsetByCodePoints(end, -1);
+		}
+		return text.substring(0, end) + "\u2026";
 	}
 }

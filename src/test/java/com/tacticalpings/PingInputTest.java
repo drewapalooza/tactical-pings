@@ -47,6 +47,8 @@ public class PingInputTest
 	private KeyListener hotkey;
 	private PingActivation activation = PingActivation.KEYBOARD;
 	private Keybind binding = Keybind.ALT;
+	private int pingCount = 4;
+	private PingSlot quickPing = PingSlot.TWO;
 
 	@Before
 	public void setup()
@@ -82,6 +84,18 @@ public class PingInputTest
 					{
 						return binding;
 					}
+
+					@Override
+					public int pingCount()
+					{
+						return pingCount;
+					}
+
+					@Override
+					public PingSlot quickPing()
+					{
+						return quickPing;
+					}
 				});
 				bind(TacticalPingsPlugin.class).toProvider(() -> plugin);
 				bind(ClientThread.class).toProvider(() -> clientThread);
@@ -107,7 +121,7 @@ public class PingInputTest
 		MouseEvent release = mouse(MouseEvent.MOUSE_RELEASED, 100, 50, MouseEvent.BUTTON1);
 		input.mouseReleased(release);
 		assertTrue(release.isConsumed());
-		verify(plugin).sendPing(tile, PingType.FLEE);
+		verify(plugin).sendPing(tile, PingSlot.ONE);
 		MouseEvent click = mouse(MouseEvent.MOUSE_CLICKED, 100, 50, MouseEvent.BUTTON1);
 		input.mouseClicked(click);
 		assertTrue(click.isConsumed());
@@ -174,7 +188,7 @@ public class PingInputTest
 			call.run();
 		}
 		verify(resolver).captureAtPress(org.mockito.ArgumentMatchers.eq(new java.awt.Point(180, 180)), any());
-		verify(plugin).sendPing(clicked, PingType.FLEE);
+		verify(plugin).sendPing(clicked, PingSlot.ONE);
 	}
 
 	@Test
@@ -187,7 +201,7 @@ public class PingInputTest
 		input.mousePressed(mouse(MouseEvent.MOUSE_PRESSED, 100, 100, MouseEvent.BUTTON1));
 		input.updateHover(tile.dx(5), new Point(150, 100));
 		input.mouseReleased(mouse(MouseEvent.MOUSE_RELEASED, 150, 100, MouseEvent.BUTTON1));
-		verify(plugin).sendSelection(selected, PingType.GO);
+		verify(plugin).sendSelection(selected, PingSlot.TWO);
 	}
 
 	@Test
@@ -205,7 +219,7 @@ public class PingInputTest
 		MouseEvent release = mouse(MouseEvent.MOUSE_RELEASED, 50, 100, MouseEvent.BUTTON1);
 		input.mouseReleased(release);
 		assertTrue(release.isConsumed());
-		verify(plugin).sendPing(tile, PingType.USE);
+		verify(plugin).sendPing(tile, PingSlot.FOUR);
 		MouseEvent click = mouse(MouseEvent.MOUSE_CLICKED, 50, 100, MouseEvent.BUTTON1);
 		input.mouseClicked(click);
 		assertTrue(click.isConsumed());
@@ -225,7 +239,7 @@ public class PingInputTest
 		input.updateHover(tile.dx(4), new Point(160, 160));
 		input.mousePressed(mouse(MouseEvent.MOUSE_PRESSED, 160, 160, MouseEvent.BUTTON1));
 		input.mouseReleased(mouse(MouseEvent.MOUSE_RELEASED, 160, 210, MouseEvent.BUTTON1));
-		verify(plugin).sendPing(tile.dx(4), PingType.ATTACK);
+		verify(plugin).sendPing(tile.dx(4), PingSlot.THREE);
 	}
 
 	@Test
@@ -235,7 +249,34 @@ public class PingInputTest
 		prime(4);
 		input.mousePressed(mouse(MouseEvent.MOUSE_PRESSED, 100, 100, MouseEvent.BUTTON1));
 		input.mouseReleased(mouse(MouseEvent.MOUSE_RELEASED, 100, 100, MouseEvent.BUTTON1));
-		verify(plugin).sendPing(tile, PingType.GO);
+		verify(plugin).sendPing(tile, PingSlot.TWO);
+	}
+
+	@Test
+	public void eighthSectorWorksWithAnImmediateMousePrimedDrag()
+	{
+		pingCount = 8;
+		mouseMode(PingActivation.MOUSE_4);
+		prime(4);
+		deferClientCalls = true;
+		input.mousePressed(mouse(MouseEvent.MOUSE_PRESSED, 100, 100, MouseEvent.BUTTON1));
+		input.mouseDragged(mouse(MouseEvent.MOUSE_DRAGGED, 70, 25, MouseEvent.NOBUTTON));
+		input.mouseReleased(mouse(MouseEvent.MOUSE_RELEASED, 70, 25, MouseEvent.BUTTON1));
+		for (Runnable call : clientCalls)
+		{
+			call.run();
+		}
+		verify(plugin).sendPing(tile, PingSlot.EIGHT);
+	}
+
+	@Test
+	public void oneSlotWheelAndCustomQuickClickUseOnlyEnabledSlots()
+	{
+		pingCount = 1;
+		quickPing = PingSlot.EIGHT;
+		input.mousePressed(mouse(MouseEvent.MOUSE_PRESSED, 100, 100, MouseEvent.BUTTON1));
+		input.mouseReleased(mouse(MouseEvent.MOUSE_RELEASED, 100, 100, MouseEvent.BUTTON1));
+		verify(plugin).sendPing(tile, PingSlot.ONE);
 	}
 
 	@Test
@@ -265,7 +306,7 @@ public class PingInputTest
 		input.mouseReleased(sideMouse(100, 50, 5));
 		verify(plugin, never()).sendPing(any(), any());
 		input.mouseReleased(mouse(MouseEvent.MOUSE_RELEASED, 100, 50, MouseEvent.BUTTON1));
-		verify(plugin).sendPing(tile, PingType.FLEE);
+		verify(plugin).sendPing(tile, PingSlot.ONE);
 	}
 
 	@Test
@@ -317,7 +358,7 @@ public class PingInputTest
 		input.updateHover(tile, new Point(160, 160));
 		input.mousePressed(mouse(MouseEvent.MOUSE_PRESSED, 160, 160, MouseEvent.BUTTON1));
 		input.mouseReleased(mouse(MouseEvent.MOUSE_RELEASED, 160, 160, MouseEvent.BUTTON1));
-		verify(plugin).sendPing(tile, PingType.GO);
+		verify(plugin).sendPing(tile, PingSlot.TWO);
 	}
 
 	@Test

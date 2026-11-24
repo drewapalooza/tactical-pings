@@ -66,6 +66,8 @@ public class TacticalPingsPluginTest
 		when(config.sharePings()).thenReturn(true);
 		when(config.receivePings()).thenReturn(true);
 		when(config.menuEntries()).thenReturn(true);
+		when(config.pingCount()).thenReturn(4);
+		when(config.sharedDesigns()).thenReturn(true);
 		when(party.isInParty()).thenReturn(true);
 		PartyMember member = mock(PartyMember.class);
 		when(member.getMemberId()).thenReturn(7L);
@@ -107,9 +109,9 @@ public class TacticalPingsPluginTest
 	@Test
 	public void localFeedbackIsImmediateAndServerEchoIsDeduplicated()
 	{
-		plugin.sendPing(TILE, PingType.FLEE);
+		plugin.sendPing(TILE, PingSlot.ONE);
 		assertEquals(1, plugin.getActive().size());
-		verify(audio).play(PingType.FLEE);
+		verify(audio).play(PingSound.FALLING);
 		ArgumentCaptor<TacticalPingMessage> capture = ArgumentCaptor.forClass(TacticalPingMessage.class);
 		verify(party).send(capture.capture());
 		TacticalPingMessage message = capture.getValue();
@@ -118,7 +120,7 @@ public class TacticalPingsPluginTest
 		message.setMemberId(7);
 		plugin.onTacticalPingMessage(message);
 		assertEquals(1, plugin.getActive().size());
-		verify(audio, times(1)).play(PingType.FLEE);
+		verify(audio, times(1)).play(PingSound.FALLING);
 	}
 
 	@Test
@@ -142,7 +144,7 @@ public class TacticalPingsPluginTest
 	public void localModeWorksWithoutPartyOrNetwork()
 	{
 		when(party.isInParty()).thenReturn(false);
-		plugin.sendPing(TILE, PingType.GO);
+		plugin.sendPing(TILE, PingSlot.TWO);
 		assertEquals(1, plugin.getActive().size());
 		verify(party, never()).send(any());
 		verify(party, never()).changeParty(any());
@@ -155,7 +157,7 @@ public class TacticalPingsPluginTest
 		plugin.onTacticalPingMessage(message(301, TILE, false, TILE));
 		assertTrue(plugin.getActive().isEmpty());
 		when(config.sharePings()).thenReturn(false);
-		plugin.sendPing(TILE, PingType.USE);
+		plugin.sendPing(TILE, PingSlot.FOUR);
 		assertEquals(1, plugin.getActive().size());
 		verify(party, never()).send(any());
 	}
@@ -163,7 +165,7 @@ public class TacticalPingsPluginTest
 	@Test
 	public void sceneLoadingClearsMarkersAndShutdownUnregistersWireType()
 	{
-		plugin.sendPing(TILE, PingType.ATTACK);
+		plugin.sendPing(TILE, PingSlot.THREE);
 		GameStateChanged changed = new GameStateChanged();
 		changed.setGameState(GameState.LOADING);
 		plugin.onGameStateChanged(changed);
@@ -218,7 +220,7 @@ public class TacticalPingsPluginTest
 		PingTarget target = new PingTarget(PingTarget.Kind.NPC, 100, 7, null);
 		PingOutline outline = new PingOutline(target, view, null, null, null, null);
 		when(targets.present(outline, TILE)).thenReturn(true);
-		plugin.sendSelection(new PingSelection(TILE, outline), PingType.ATTACK);
+		plugin.sendSelection(new PingSelection(TILE, outline), PingSlot.THREE);
 		ArgumentCaptor<TacticalPingMessage> capture = ArgumentCaptor.forClass(TacticalPingMessage.class);
 		verify(party).send(capture.capture());
 		assertEquals(target, capture.getValue().getTarget());
@@ -236,5 +238,60 @@ public class TacticalPingsPluginTest
 		plugin.onTacticalPingMessage(message);
 		assertEquals(outline, plugin.getActive().get(0).getOutline());
 		verify(targets).resolve(target, TILE);
+	}
+
+	@Test
+	public void sendsConfiguredDesignAndKeepsItsSnapshotWhenSettingsChange()
+	{
+		when(config.goColor()).thenReturn(java.awt.Color.MAGENTA);
+		when(config.goSymbol()).thenReturn(PingSymbol.FLAG);
+		when(config.goSound()).thenReturn(PingSound.BELL);
+		when(config.goText()).thenReturn("Stack here!");
+		plugin.sendPing(TILE, PingSlot.TWO);
+		ArgumentCaptor<TacticalPingMessage> capture = ArgumentCaptor.forClass(TacticalPingMessage.class);
+		verify(party).send(capture.capture());
+		TacticalPingMessage wire = new com.google.gson.Gson().fromJson(
+			new com.google.gson.Gson().toJson(capture.getValue()), TacticalPingMessage.class);
+		assertEquals(PingSlot.TWO, wire.getSlot());
+		PingStyleTest.assertStyle(PingStyle.fromConfig(config, PingSlot.TWO), wire.getStyle());
+		when(config.goText()).thenReturn("Changed later");
+		assertEquals("Stack here!", plugin.getActive().get(0).getStyle().getText());
+		verify(audio).play(PingSound.BELL);
+	}
+
+	@Test
+	public void receivesEighthSlotDesignEvenWithAOneSlotLocalWheel()
+	{
+		when(config.pingCount()).thenReturn(1);
+		TacticalPingMessage incoming = new TacticalPingMessage(PingSlot.EIGHT, 301, TILE, false, TILE, System.currentTimeMillis());
+		incoming.setMemberId(7);
+		PingStyle design = new PingStyle(java.awt.Color.PINK, PingSymbol.SHIELD, PingSound.CHORD, "Defend me!");
+		incoming.setStyle(design);
+		plugin.onTacticalPingMessage(incoming);
+		PingStyleTest.assertStyle(design, plugin.getActive().get(0).getStyle());
+		verify(audio).play(PingSound.CHORD);
+	}
+
+	@Test
+	public void listenerCanOverrideSenderDesignWithTheirOwnMatchingSlot()
+	{
+		when(config.sharedDesigns()).thenReturn(false);
+		when(config.ping8Text()).thenReturn("My own text");
+		when(config.ping8Sound()).thenReturn(PingSound.SILENT);
+		TacticalPingMessage incoming = new TacticalPingMessage(PingSlot.EIGHT, 301, TILE, false, TILE, System.currentTimeMillis());
+		incoming.setMemberId(7);
+		incoming.setStyle(PingSlot.ONE.getDefaultStyle());
+		plugin.onTacticalPingMessage(incoming);
+		assertEquals("My own text", plugin.getActive().get(0).getStyle().getText());
+		verify(audio).play(PingSound.SILENT);
+	}
+
+	@Test
+	public void staleMenuCannotSendADisabledSlot()
+	{
+		when(config.pingCount()).thenReturn(1);
+		plugin.sendPing(TILE, PingSlot.EIGHT);
+		assertTrue(plugin.getActive().isEmpty());
+		verify(party, never()).send(any());
 	}
 }

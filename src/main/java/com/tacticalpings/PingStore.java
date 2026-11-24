@@ -27,6 +27,12 @@ public final class PingStore
 	public boolean add(String id, long memberId, PingType type, WorldPoint point,
 		long nowNanos, int durationMillis, PingOutline outline)
 	{
+		return add(id, memberId, type, point, nowNanos, durationMillis, outline, PingStyle.defaults(type));
+	}
+
+	public boolean add(String id, long memberId, PingType type, WorldPoint point,
+		long nowNanos, int durationMillis, PingOutline outline, PingStyle style)
+	{
 		prune(nowNanos);
 		Long memberTime = memberTimes.get(memberId);
 		if (seen.containsKey(id) || (memberTime != null && nowNanos - memberTime < MEMBER_INTERVAL)
@@ -43,7 +49,7 @@ public final class PingStore
 		{
 			active.remove(0);
 		}
-		active.add(new ActivePing(type, point, nowNanos, durationMillis, outline));
+		active.add(new ActivePing(type, point, nowNanos, durationMillis, outline, style));
 		return true;
 	}
 

@@ -153,7 +153,7 @@ public class PingInput extends MouseAdapter implements KeyListener
 			captured = true;
 			cursor = event.getPoint();
 			long token = generation.incrementAndGet();
-			Wheel started = new Wheel(event.getPoint(), token);
+			Wheel started = new Wheel(event.getPoint(), token, config.pingCount(), config.quickPing());
 			wheel = started;
 			// Queue capture before release. The wheel responds immediately, even when
 			// press, drag and release all arrive before the next client tick.
@@ -194,16 +194,17 @@ public class PingInput extends MouseAdapter implements KeyListener
 						if (generation.get() == completed.generation)
 						{
 							PingSelection selection = completed.selection;
-							PingType type = choose(release.x - completed.origin.x, release.y - completed.origin.y);
+							PingSlot slot = PingWheelLayout.choose(release.x - completed.origin.x,
+								release.y - completed.origin.y, completed.count, completed.quick);
 							if (selection != null)
 							{
 								if (selection.getOutline() == null)
 								{
-									plugin.sendPing(selection.getPoint(), type);
+									plugin.sendPing(selection.getPoint(), slot);
 								}
 								else
 								{
-									plugin.sendSelection(selection, type);
+									plugin.sendSelection(selection, slot);
 								}
 							}
 						}
@@ -293,26 +294,20 @@ public class PingInput extends MouseAdapter implements KeyListener
 		event.consume();
 	}
 
-	public static PingType choose(double dx, double dy)
-	{
-		if (dx * dx + dy * dy < 18 * 18)
-		{
-			return PingType.GO;
-		}
-		return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? PingType.GO : PingType.USE)
-			: (dy > 0 ? PingType.ATTACK : PingType.FLEE);
-	}
-
 	public static final class Wheel
 	{
 		volatile PingSelection selection;
 		final Point origin;
 		final long generation;
+		final int count;
+		final PingSlot quick;
 
-		Wheel(Point origin, long generation)
+		Wheel(Point origin, long generation, int count, PingSlot quick)
 		{
 			this.origin = origin;
 			this.generation = generation;
+			this.count = PingWheelLayout.count(count);
+			this.quick = quick;
 		}
 	}
 

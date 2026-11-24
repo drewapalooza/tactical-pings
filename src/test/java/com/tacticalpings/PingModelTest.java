@@ -95,11 +95,11 @@ public class PingModelTest
 	@Test
 	public void wheelDirectionsAndDeadzone()
 	{
-		assertEquals(PingType.GO, PingInput.choose(0, 0));
-		assertEquals(PingType.FLEE, PingInput.choose(0, -40));
-		assertEquals(PingType.GO, PingInput.choose(40, 0));
-		assertEquals(PingType.ATTACK, PingInput.choose(0, 40));
-		assertEquals(PingType.USE, PingInput.choose(-40, 0));
+		assertEquals(PingSlot.TWO, PingWheelLayout.choose(0, 0, 4, PingSlot.TWO));
+		assertEquals(PingSlot.ONE, PingWheelLayout.choose(0, -40, 4, PingSlot.TWO));
+		assertEquals(PingSlot.TWO, PingWheelLayout.choose(40, 0, 4, PingSlot.TWO));
+		assertEquals(PingSlot.THREE, PingWheelLayout.choose(0, 40, 4, PingSlot.TWO));
+		assertEquals(PingSlot.FOUR, PingWheelLayout.choose(-40, 0, 4, PingSlot.TWO));
 	}
 
 	@Test

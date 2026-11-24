@@ -20,6 +20,10 @@ public final class GenerateChimes
 		write(directory, "go", new double[] {523.251, 783.991}, new double[] {0, 0.12}, 0.22);
 		write(directory, "attack", new double[] {659.255, 659.255, 1046.502}, new double[] {0, 0.09, 0.18}, 0.11);
 		write(directory, "use", new double[] {987.767, 1318.510}, new double[] {0, 0.08}, 0.30);
+		write(directory, "bell", new double[] {783.991, 1567.982}, new double[] {0, 0}, 0.40);
+		write(directory, "sonar", new double[] {391.995, 391.995}, new double[] {0, 0.20}, 0.30);
+		write(directory, "chirp", new double[] {783.991, 1046.502, 1567.982}, new double[] {0, 0.06, 0.12}, 0.14);
+		write(directory, "chord", new double[] {523.251, 659.255, 783.991}, new double[] {0, 0, 0}, 0.42);
 	}
 
 	private static void write(File directory, String name, double[] frequencies, double[] starts, double decay) throws Exception
