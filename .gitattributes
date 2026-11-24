@@ -1,0 +1,6 @@
+# Copyright (c) 2026, Drew. SPDX-License-Identifier: BSD-2-Clause
+* text=auto eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.png binary
+*.wav binary

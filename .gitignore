@@ -1,0 +1,7 @@
+.gradle/
+build/
+.idea/
+*.iml
+# Local design references are not part of the public plugin source.
+docs/concept.png
+docs/concept-prompt.md

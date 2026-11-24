@@ -1,0 +1,68 @@
+<!-- Copyright (c) 2026, Drew. SPDX-License-Identifier: BSD-2-Clause -->
+# Tactical Pings
+
+Manual, temporary team pings for RuneLite: a highlighted ground tile, a circular ripple that expands and returns to the clicked tile, and an original chime for each action.
+
+Click an NPC, player, world object or visible dropped item when pinging and its model border pulses in the ping color, then fades with the ripple. The selected entity is fixed at mouse-down; dragging over something else does not change it. Moving actors keep their outline for that ping's short lifetime. Despawns, replacement entities and scene changes clear the outline. Ground items must be among the models already rendered in the item pile; hidden/unrendered drops are not revealed. Inventory widgets remain normal inventory clicks.
+
+![The actual Java renderer and ping wheel](docs/renderer.png)
+
+| Color | Meaning | Symbol | Wheel direction | Chime |
+| --- | --- | --- | --- | --- |
+| Yellow | Flee | Exclamation point | Up | Falling two-note warning |
+| Green | Go | Down arrow | Right | Rising two-note chime |
+| Red | Attack | Crosshair | Down | Three short strikes |
+| Blue | Use | Diamond | Left | Soft bright double chime |
+
+## Controls
+
+For mouse-only priming, set **Ping input** to **Mouse button 4** or **Mouse button 5** in Tactical Pings settings. **Tap the side button to prime one ping**, then **left-click a scene or minimap tile, drag toward an action, and release** to send it. The tile is selected by your left-click. The side button itself never sends a ping. A small **Ping ready: click & drag** hint follows the cursor while primed; it clears when you click. A quick primed left-click sends **Go**. Tap the side button again, press Escape, right-click, leave the canvas or lose focus to cancel. Clicking an interface cancels priming and preserves that interface's normal action. The keyboard hotkey is inactive in mouse mode. Your mouse must send a native MB4/MB5 event; if its software remaps the side button to a keyboard key, restore its normal mouse-button assignment.
+
+Hold **Alt**, press the left mouse button on a **scene tile or the visible minimap**, drag toward an action, and release. A quick Alt-click without dragging sends **Go**. The chosen tile stays fixed while you select the action. Escape, right-click, leaving the canvas or losing focus cancels the wheel. The wheel key is configurable. Alt-drag on RuneLite overlay panels can conflict with moving overlays; use the ground or choose a different ping key.
+
+You can also right-click a ground tile and choose **Ping Flee / Go / Attack / Use**. These entries sit below **Walk here**, preserving ordinary left-click behavior. They only create a ping; they do not walk, attack, use an item, change a target, or send an OSRS game action.
+
+Default lifetime is **1.6 seconds**, configurable from 0.8 to 3 seconds. Sound, independent volume, minimap ripples, scene labels, sharing and receiving can be configured separately. Reduced motion replaces the moving ripple with a stationary fading tile and ring. Symbols distinguish actions without relying only on color.
+
+**Clicked-target outlines** controls the pulsing border. Reduced motion also makes the target border steady before its final fade. Press-and-drag can begin immediately: target capture and release are queued in order using the saved mouse-down position, with no required hold delay.
+
+This version supports the game scene and minimap, with the local player's top-level world view. The full-screen world-map interface and nested views such as sailing interiors are not input targets. Game-disabled minimaps remain disabled. Markers clear on scene loading, logout, world hop and party changes.
+
+## Sharing with friends
+
+1. Each player installs and enables **Tactical Pings**.
+2. Enable RuneLite's built-in **Party** plugin and create or join the **same party** using its passphrase.
+3. Be in the same game world, plane and loaded scene. Leave **Share with party** and **Receive party pings** enabled.
+4. Ping a tile. Your own marker and chime appear immediately; other party members receive the same action through RuneLite's party relay.
+
+No separate server, port forwarding, API key, or paid service is needed. Normal Party tile pings do not carry these four action meanings; everyone receiving these pings needs this plugin. If Party's own ping hotkey overlaps, change one of the hotkeys in its settings. Tactical Pings does not alter another plugin's settings, create/join a party, or leave a party when disabled. Local pings also work without a party. A dropped relay connection can prevent delivery; the plugin does not claim acknowledgements or guaranteed delivery.
+
+Sharing sends the clicked tile, its template coordinates and instance flag, the world, action, a random ping identifier, protocol version and timestamp. A deliberately selected target adds its kind, NPC/object/item ID or actor index; a selected player also includes that player's normalized name to prevent highlighting a different player at a reused index. RuneLite's relay attaches its existing party member identifier. This plugin adds no account credentials, chat contents, gear or background player-location stream. Disable **Share with party** for local-only sending, or **Receive party pings** to ignore incoming pings. RuneLite's Party plugin has its own independent data sharing. Older Tactical Pings versions can still display the tile ripple; both clients need 1.1.0 or newer to share target outlines.
+
+Incoming messages are restricted to current party members and matching world, plane, physical scene coordinates and template coordinates. Instance pings are not broadly remapped to every repeated room with the same template. Invalid, stale and duplicate messages are ignored. Sender clocks need to be reasonably synchronized (10 seconds behind / 30 seconds ahead tolerance). Rate limits allow one accepted ping per sender per 450 ms and one overall per 120 ms, with bounded history and active markers. Extra pings are dropped to limit visual and audio spam.
+
+## Build and local testing
+
+Use JDK 11 or newer (development checks used JDK 17). The wrapper verifies the Gradle distribution checksum. RuneLite dependencies default to `latest.release`, as recommended by the official template.
+
+```powershell
+.\gradlew.bat test jar
+.\gradlew.bat preview
+.\gradlew.bat run
+```
+
+`run` starts standard RuneLite in developer mode with this plugin registered. Enable **Tactical Pings** in its settings. `preview` renders the actual Java painter onto a synthetic floor, producing `build/previews/renderer.png`. No login is needed for the automated tests or preview.
+
+The plugin JAR is `build/libs/tactical-pings-1.1.0.jar`. A compatible client's existing sideload loader can load this JAR; standard RuneLite Plugin Hub distribution follows the source-review process below. For a client on a known older API, build and test with a quoted override, for example:
+
+```powershell
+.\gradlew.bat test jar '-PruneliteVersion=1.13.7'
+```
+
+All four WAVs are bundled classpath resources. Their original synthesis source is in `tools/GenerateChimes.java`; regenerate them with `java tools/GenerateChimes.java` from this directory. This offline authoring tool is excluded from the plugin JAR. Audio playback uses RuneLite's injected `AudioPlayer` and executor, away from the game thread.
+
+## Submission
+
+This is the standalone source repository for **Tactical Pings**. See [SUBMISSION.md](SUBMISSION.md) for the review notes and validation. Plugin Hub submissions reference this repository and a specific source commit in a single manifest in **runelite/plugin-hub**.
+
+The overlay uses Java2D paths and original bundled chimes. The documentation preview is an offline render on a synthetic floor. No RuneScape screenshots or generated concept artwork are included in the plugin. Code, icon and chimes are BSD-2-Clause.
