@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @PluginDescriptor(
-	name = "Tactical Pings",
+	name = "Ayra's Pings",
 	description = "Share manual flee, go, attack and use tile pings with your RuneLite party",
 	tags = {"party", "ping", "tile", "team", "communication", "ripple"}
 )
@@ -262,7 +262,7 @@ public class TacticalPingsPlugin extends Plugin
 			catch (IllegalStateException ex)
 			{
 				// A disconnect cannot prevent the immediate local marker and chime.
-				log.debug("Party connection unavailable for Tactical Pings", ex);
+				log.debug("Party connection unavailable for Ayra's Pings", ex);
 			}
 		}
 	}

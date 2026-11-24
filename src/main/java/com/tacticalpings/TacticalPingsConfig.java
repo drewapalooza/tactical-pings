@@ -41,7 +41,7 @@ public interface TacticalPingsConfig extends Config
 	}
 
 	@ConfigItem(keyName = "receivePings", name = "Receive party pings", position = 4,
-		description = "Display Tactical Pings from current RuneLite party members in the same world, plane and loaded scene")
+		description = "Display Ayra's Pings from current RuneLite party members in the same world, plane and loaded scene")
 	default boolean receivePings()
 	{
 		return true;

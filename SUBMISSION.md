@@ -1,7 +1,7 @@
 <!-- Copyright (c) 2026, Drew. SPDX-License-Identifier: BSD-2-Clause -->
 # Plugin Hub review notes
 
-This repository contains **Tactical Pings only**: manually selected Flee, Go, Attack and Use communications. There are no boss trainers, encounter helpers, automated danger zones or other plugins in this source tree.
+This repository contains **Ayra's Pings only**: manually selected Flee, Go, Attack and Use communications. There are no boss trainers, encounter helpers, automated danger zones or other plugins in this source tree.
 
 ## Rules reviewed
 

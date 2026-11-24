@@ -64,7 +64,7 @@ public class PingAudio
 			}
 			catch (IOException | UnsupportedAudioFileException | LineUnavailableException | IllegalArgumentException ex)
 			{
-				log.debug("Unable to play Tactical Pings chime", ex);
+				log.debug("Unable to play Ayra's Pings chime", ex);
 			}
 		});
 	}

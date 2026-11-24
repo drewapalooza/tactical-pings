@@ -28,7 +28,7 @@ public final class PingPreview
 		g.fillRect(0, 0, 1280, 820);
 		g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 27));
 		g.setColor(new Color(235, 240, 247));
-		g.drawString("TACTICAL PINGS", 38, 48);
+		g.drawString("AYRA'S PINGS", 38, 48);
 		g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 		g.setColor(new Color(155, 169, 184));
 		g.drawString("Live Java renderer · circular ground ripple · distinct symbols", 38, 74);
