@@ -48,7 +48,7 @@ The local wheel count does not restrict receiving slots from other players. Reci
 
 Validation on 2026-11-24:
 
-- 76 automated tests covering animation, target identity/expiry, packet validation/isolation/deduplication, scene lifecycle, minimap layouts/rotation/zoom, input priming/cancellation/immediate drag, dependency wiring, all eight wheel counts, shared design/slot round trips and fallbacks, text validation, listener overrides, audio controls and all bundled chimes, conditional settings panels and saved values, accordion state, toolbar lifecycle, and minute-long ping expiry/animation.
+- 77 automated tests covering animation, target identity/expiry, packet validation/isolation/deduplication, scene lifecycle, minimap layouts/rotation/zoom, input priming/cancellation/immediate drag, dependency wiring, all eight wheel counts, shared design/slot round trips and fallbacks, text validation, listener overrides, audio controls and all bundled chimes, conditional settings panels and saved values, accordion state, caret/Unicode editing, toolbar lifecycle, and minute-long ping expiry/animation.
 - Production compilation using the official standard-build dependency list against the Hub's RuneLite version, 1.13.8.
 - Compatibility checks against RuneLite 1.13.7.
 - Offline rendering using the actual Java painter. The user has reported successful sideload testing of the earlier 1.1.0 release; the new customization is covered by automated client fixtures.

@@ -131,6 +131,28 @@ public class PingSettingsPanelTest
 	}
 
 	@Test
+	public void editingInTheMiddlePreservesCaretAndTextAfterTheSelection() throws Exception
+	{
+		SwingUtilities.invokeAndWait(() ->
+		{
+			Fixture f = new Fixture();
+			f.count.set(8);
+			PingSettingsPanel panel = f.create();
+			JTextField text = find(panel, "ping8Text", JTextField.class);
+			text.setText("AB");
+			text.setCaretPosition(1);
+			text.replaceSelection("x");
+			assertEquals("AxB", text.getText());
+			assertEquals(2, text.getCaretPosition());
+			text.setText("a".repeat(63) + "Z");
+			text.select(1, 2);
+			text.replaceSelection("🚩extra");
+			assertEquals("a🚩" + "a".repeat(61) + "Z", text.getText());
+			panel.close();
+		});
+	}
+
+	@Test
 	public void accordionHeaderTracksItsExpandedState() throws Exception
 	{
 		SwingUtilities.invokeAndWait(() ->

@@ -271,13 +271,23 @@ public class PingSettingsPanel extends PluginPanel
 
 	private static void row(JPanel parent, String text, JComponent control)
 	{
+		row(parent, text, control, 88);
+	}
+
+	private static void row(JPanel parent, String text, JComponent control, int labelWidth)
+	{
 		JPanel row = new JPanel(new BorderLayout(6, 0));
 		row.setOpaque(false);
 		JLabel label = new JLabel(text);
 		label.setForeground(new Color(218, 225, 235));
+		Font fieldFont = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
+		label.setFont(fieldFont);
+		label.setPreferredSize(new Dimension(labelWidth, 28));
 		label.setLabelFor(control);
 		control.getAccessibleContext().setAccessibleName(text);
-		control.setPreferredSize(new Dimension(115, 26));
+		control.setFont(fieldFont);
+		control.setPreferredSize(new Dimension(115, 28));
+		row.setPreferredSize(new Dimension(labelWidth + 121, 28));
 		row.add(label, BorderLayout.WEST);
 		row.add(control, BorderLayout.CENTER);
 		parent.add(row);
@@ -304,10 +314,10 @@ public class PingSettingsPanel extends PluginPanel
 				picker.setOnClose(selected -> save(slot.getConfigPrefix() + "Color", selected));
 				picker.setVisible(true);
 			});
-			row(card.body, "Color", color);
+			row(card.body, "Color", color, 48);
 			symbol.setName(slot.getConfigPrefix() + "Symbol");
 			symbol.addActionListener(e -> save(slot.getConfigPrefix() + "Symbol", symbol.getSelectedItem()));
-			row(card.body, "Symbol", symbol);
+			row(card.body, "Symbol", symbol, 48);
 			text.setName(slot.getConfigPrefix() + "Text");
 			text.setToolTipText("Your text, up to 64 characters. Enter or leave the field to save.");
 			((AbstractDocument) text.getDocument()).setDocumentFilter(new DocumentFilter()
@@ -322,8 +332,23 @@ public class PingSettingsPanel extends PluginPanel
 				public void replace(FilterBypass fb, int offset, int length, String value, AttributeSet attrs) throws BadLocationException
 				{
 					String previous = fb.getDocument().getText(0, fb.getDocument().getLength());
-					String proposed = previous.substring(0, offset) + (value == null ? "" : value) + previous.substring(offset + length);
-					fb.replace(0, previous.length(), PingStyle.cleanText(proposed), attrs);
+					String before = previous.substring(0, offset);
+					String after = previous.substring(offset + length);
+					String retained = before + after;
+					int available = Math.max(0, PingStyle.MAX_TEXT_LENGTH - retained.codePointCount(0, retained.length()));
+					String inserted = PingStyle.cleanText(value == null ? "" : value);
+					int end = inserted.offsetByCodePoints(0, Math.min(available, inserted.codePointCount(0, inserted.length())));
+					inserted = inserted.substring(0, end);
+					String proposed = before + inserted + after;
+					if (PingStyle.validText(proposed))
+					{
+						fb.replace(offset, length, inserted, attrs);
+					}
+					else
+					{
+						// A selection through half of a surrogate pair must not leave invalid text.
+						fb.replace(0, previous.length(), PingStyle.cleanText(proposed), attrs);
+					}
 				}
 			});
 			text.addActionListener(e -> save(slot.getConfigPrefix() + "Text", text.getText()));
@@ -335,7 +360,7 @@ public class PingSettingsPanel extends PluginPanel
 					save(slot.getConfigPrefix() + "Text", text.getText());
 				}
 			});
-			row(card.body, "Text", text);
+			row(card.body, "Text", text, 48);
 			sound.setName(slot.getConfigPrefix() + "Sound");
 			sound.addActionListener(e ->
 			{
@@ -345,7 +370,7 @@ public class PingSettingsPanel extends PluginPanel
 					audio.play((PingSound) sound.getSelectedItem());
 				}
 			});
-			row(card.body, "Sound", sound);
+			row(card.body, "Sound", sound, 48);
 		}
 
 		private void refresh()
