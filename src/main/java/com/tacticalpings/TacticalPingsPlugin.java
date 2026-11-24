@@ -38,8 +38,7 @@ import org.slf4j.LoggerFactory;
 @PluginDescriptor(
 	name = "Tactical Pings",
 	description = "Share manual flee, go, attack and use tile pings with your RuneLite party",
-	tags = {"party", "ping", "tile", "team", "communication", "ripple"},
-	enabledByDefault = false
+	tags = {"party", "ping", "tile", "team", "communication", "ripple"}
 )
 public class TacticalPingsPlugin extends Plugin
 {

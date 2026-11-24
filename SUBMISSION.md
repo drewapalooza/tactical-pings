@@ -31,7 +31,7 @@ Incoming messages require current party membership, matching world/plane/loaded 
 
 ## Build, resources and validation
 
-- Java 11 source/bytecode, BSD-2-Clause license, matching discovery properties/plugin descriptor, and 48 x 48 icon.
+- Java 11 source/bytecode, BSD-2-Clause license, matching discovery properties/plugin descriptor, default-enabled installation behavior, and 48 x 48 icon.
 - `build=standard`; no extra runtime dependencies or custom production build requirements.
 - Uses `InterfaceID` packed widget IDs instead of the disallowed `WidgetInfo`/`WidgetID` API.
 - No production reflection, native code, subprocesses, runtime downloads, filesystem reads/writes, custom Gson/HTTP clients, synthetic input, chat modification, `Client.menuAction` or `Client.runScript`.
