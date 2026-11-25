@@ -52,6 +52,8 @@ You can also right-click a ground tile and choose an enabled **Ping 1–8** entr
 
 Default lifetime is **1.6 seconds**, configurable from **0.8 to 60 seconds**. The sidebar's **Duration (sec)** field accepts up to 60.0; the standard settings use milliseconds, up to 60,000. Long pings appear promptly, hold their marker, then return and fade at the end. Lifetime is local: each receiving client uses its own duration setting. Sound, independent volume, minimap ripples, scene labels, sharing and receiving can be configured separately. Scene labels default to enabled; an existing saved preference is preserved. Reduced motion replaces the moving ripple with a stationary fading tile and ring. Symbols distinguish actions without relying only on color.
 
+**Sender names** (under **Visuals**) optionally shows who sent each scene ping beneath its symbol/custom text. It defaults to off and works independently of **Scene labels**, so names can remain visible while action text is hidden. Local pings use your in-game display name; received pings use the sender's existing RuneLite Party display name. Unknown names are omitted. Labels identify the sender, not the clicked target, and fade with the ping. This setting is local and adds no name field or new messages to the ping protocol.
+
 **Clicked-target outlines** controls the pulsing border. Reduced motion also makes the target border steady before its final fade. Press-and-drag can begin immediately: target capture and release are queued in order using the saved mouse-down position, with no required hold delay.
 
 This version supports the game scene and minimap, with the local player's top-level world view. The full-screen world-map interface and nested views such as sailing interiors are not input targets. Game-disabled minimaps remain disabled. Markers clear on scene loading, logout, world hop and party changes.
@@ -83,7 +85,7 @@ Use JDK 11 or newer (development checks used JDK 17). The wrapper verifies the G
 
 `run` starts standard RuneLite in developer mode with this plugin registered. Enable **Ayra's Pings** in its settings. `preview` renders the actual Java painter onto a synthetic floor, producing `build/previews/renderer.png`. No login is needed for the automated tests or preview.
 
-The plugin JAR is `build/libs/tactical-pings-1.3.0.jar`. A compatible client's existing sideload loader can load this JAR; standard RuneLite Plugin Hub distribution follows the source-review process below. For a client on a known older API, build and test with a quoted override, for example:
+The plugin JAR is `build/libs/tactical-pings-1.4.0.jar`. A compatible client's existing sideload loader can load this JAR; standard RuneLite Plugin Hub distribution follows the source-review process below. For a client on a known older API, build and test with a quoted override, for example:
 
 ```powershell
 .\gradlew.bat test jar '-PruneliteVersion=1.13.7'

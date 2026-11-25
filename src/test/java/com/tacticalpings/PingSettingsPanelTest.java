@@ -131,6 +131,24 @@ public class PingSettingsPanelTest
 	}
 
 	@Test
+	public void optionalSenderNamesCanBeEnabledIndependentlyOfSceneLabels() throws Exception
+	{
+		SwingUtilities.invokeAndWait(() ->
+		{
+			Fixture f = new Fixture();
+			when(f.config.labels()).thenReturn(false);
+			PingSettingsPanel panel = f.create();
+			javax.swing.JCheckBox names = find(panel, "senderNames", javax.swing.JCheckBox.class);
+			assertTrue(!names.isSelected());
+			names.doClick();
+			assertEquals(true, f.values.get("senderNames"));
+			assertTrue(names.isSelected());
+			assertTrue(!find(panel, "labels", javax.swing.JCheckBox.class).isSelected());
+			panel.close();
+		});
+	}
+
+	@Test
 	public void editingInTheMiddlePreservesCaretAndTextAfterTheSelection() throws Exception
 	{
 		SwingUtilities.invokeAndWait(() ->
@@ -212,6 +230,7 @@ public class PingSettingsPanelTest
 			when(config.durationMillis()).thenAnswer(call -> values.getOrDefault("durationMillis", 1600));
 			when(config.ping8Text()).thenAnswer(call -> values.getOrDefault("ping8Text", "Defend"));
 			when(config.fleeSound()).thenAnswer(call -> values.getOrDefault("fleeSound", PingSound.FALLING));
+			when(config.senderNames()).thenAnswer(call -> values.getOrDefault("senderNames", false));
 			doAnswer(call ->
 			{
 				String key = call.getArgument(1);

@@ -5,7 +5,7 @@ This repository contains **Ayra's Pings only**: 1–8 manually selected communic
 
 ## Rules reviewed
 
-Baseline reviewed on 2026-11-23; customization and wheel changes checked on 2026-11-24 against the current official sources:
+Baseline reviewed on 2026-11-23; customization and wheel changes checked on 2026-11-24; sender names checked on 2026-11-25 against the current official sources:
 
 - [Plugin Hub submission instructions](https://github.com/runelite/plugin-hub/blob/master/README.md)
 - [Review scope](https://github.com/runelite/runelite/wiki/Plugin-Hub-Review)
@@ -31,6 +31,8 @@ Incoming messages require current party membership, matching world/plane/loaded 
 
 Design data is a bounded optional protocol-1 extension. RGB values are restricted to 24-bit color, symbol/sound IDs resolve only to bundled enums, and text is limited to 64 Unicode code points without invisible controls or line breaks. Text is literal Java2D text; menu brackets are escaped. Missing, malformed or unknown designs use the original action design. Slots 5–8 retain a legacy Go action for older clients. No audio files, images, arbitrary asset paths or URLs are sent or loaded.
 
+Optional sender-name labels default off and are controlled locally, independently of scene text labels. Names are snapshots of the current RuneLite Party member display name attached to the relay's existing member identifier, or the local in-game display name for local pings. They are not read from custom ping text, clicked-player target metadata or an arbitrary ping name field. Markup/control characters are removed, display length is bounded, and unavailable names are omitted. The wire message remains unchanged; no extra names or messages are sent by this feature.
+
 The sidebar uses collapsible groups for general settings and creates customization accordions only for enabled slots. The native configuration also groups general settings into four accordions; design fields remain persisted but hidden there, with no empty slot sections. Changing the count updates the sidebar and quick-click options immediately without resetting disabled designs. Own-group ConfigManager writes and public ClientToolbar/ColorPickerManager APIs are used; there is no reflection or modification of another plugin's UI.
 
 Ping lifetimes are clamped to 800–60,000 ms on each receiving client. Long lifetimes use a prompt entrance and exit with a stationary hold, while the store still expires them at their full configured lifetime. Existing scene/party/despawn cleanup and bounded active markers remain in place.
@@ -46,9 +48,9 @@ The local wheel count does not restrict receiving slots from other players. Reci
 - Eight original PCM WAV resources use RuneLite's injected `AudioPlayer` classpath-resource overload and shared executor. The audio synthesis source is an offline developer tool, excluded from the runtime JAR.
 - Tests, preview rendering and the audio authoring tool are outside the production source set. No local updater, build output, reference screenshot or other plugin is committed.
 
-Validation on 2026-11-24:
+Validation on 2026-11-25:
 
-- 77 automated tests covering animation, target identity/expiry, packet validation/isolation/deduplication, scene lifecycle, minimap layouts/rotation/zoom, input priming/cancellation/immediate drag, dependency wiring, all eight wheel counts, shared design/slot round trips and fallbacks, text validation, listener overrides, audio controls and all bundled chimes, conditional settings panels and saved values, accordion state, caret/Unicode editing, toolbar lifecycle, and minute-long ping expiry/animation.
+- 82 automated tests covering animation, target identity/expiry, packet validation/isolation/deduplication, scene lifecycle, minimap layouts/rotation/zoom, input priming/cancellation/immediate drag, dependency wiring, all eight wheel counts, shared design/slot round trips and fallbacks, text validation, listener overrides, audio controls and all bundled chimes, conditional settings panels and saved values, accordion state, caret/Unicode editing, toolbar lifecycle, and minute-long ping expiry/animation, and sender-name lookup, rendering and local controls.
 - Production compilation using the official standard-build dependency list against the Hub's RuneLite version, 1.13.8.
 - Compatibility checks against RuneLite 1.13.7.
 - Offline rendering using the actual Java painter. The user has reported successful sideload testing of the earlier 1.1.0 release; the new customization is covered by automated client fixtures.

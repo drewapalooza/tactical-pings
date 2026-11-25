@@ -159,6 +159,7 @@ public class PingSettingsPanel extends PluginPanel
 		add(visuals);
 		check(visuals.body, "Minimap ripples", "minimap", config::minimap);
 		check(visuals.body, "Scene labels", "labels", config::labels);
+		check(visuals.body, "Sender names", "senderNames", config::senderNames);
 		check(visuals.body, "Clicked-target outlines", "targetOutlines", config::targetOutlines);
 		check(visuals.body, "Reduced motion", "reducedMotion", config::reducedMotion);
 		JLabel heading = new JLabel("YOUR PINGS");

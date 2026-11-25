@@ -321,7 +321,13 @@ public class TacticalPingsPlugin extends Plugin
 		message.setTarget(outline == null ? null : outline.getTarget());
 		PartyMember self = party.getLocalMember();
 		long memberId = self == null ? 0 : self.getMemberId();
-		if (!accept(message, memberId, outline, style))
+		net.runelite.api.Player player = client.getLocalPlayer();
+		String senderName = player == null ? null : player.getName();
+		if (senderName == null && self != null)
+		{
+			senderName = self.getDisplayName();
+		}
+		if (!accept(message, memberId, outline, style, senderName))
 		{
 			return;
 		}
@@ -349,8 +355,12 @@ public class TacticalPingsPlugin extends Plugin
 			if (!running || token != lifecycle.get() || partyId != party.getPartyId()
 				|| !config.receivePings() || !party.isInParty()
 				|| message == null || !message.isValid(System.currentTimeMillis())
-				|| party.getMemberById(message.getMemberId()) == null
 				|| message.getWorld() != client.getWorld() || !canShow(message.getPoint()))
+			{
+				return;
+			}
+			PartyMember sender = party.getMemberById(message.getMemberId());
+			if (sender == null)
 			{
 				return;
 			}
@@ -366,7 +376,8 @@ public class TacticalPingsPlugin extends Plugin
 				return;
 			}
 			PingStyle style = config.sharedDesigns() ? message.getStyle() : PingStyle.fromConfig(config, message.getSlot());
-			accept(message, message.getMemberId(), targets.resolve(message.getTarget(), message.getPoint()), style);
+			accept(message, message.getMemberId(), targets.resolve(message.getTarget(), message.getPoint()), style,
+				sender.getDisplayName());
 		});
 	}
 
@@ -377,10 +388,10 @@ public class TacticalPingsPlugin extends Plugin
 			&& point.getPlane() == view.getPlane() && LocalPoint.fromWorld(view, point) != null;
 	}
 
-	private boolean accept(TacticalPingMessage message, long memberId, PingOutline outline, PingStyle style)
+	private boolean accept(TacticalPingMessage message, long memberId, PingOutline outline, PingStyle style, String senderName)
 	{
 		if (!store.add(message.getId(), memberId, message.getType(), message.getPoint(),
-			System.nanoTime(), Math.max(800, Math.min(60000, config.durationMillis())), outline, style))
+			System.nanoTime(), Math.max(800, Math.min(60000, config.durationMillis())), outline, style, senderName))
 		{
 			return false;
 		}

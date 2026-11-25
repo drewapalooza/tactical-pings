@@ -2,6 +2,7 @@
 package com.tacticalpings;
 
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.client.util.Text;
 
 public final class ActivePing
 {
@@ -11,6 +12,7 @@ public final class ActivePing
 	private final long startedNanos;
 	private final long durationNanos;
 	private final PingOutline outline;
+	private final String senderName;
 
 	public ActivePing(PingType type, WorldPoint point, long startedNanos, int durationMillis)
 	{
@@ -25,12 +27,35 @@ public final class ActivePing
 	public ActivePing(PingType type, WorldPoint point, long startedNanos, int durationMillis,
 		PingOutline outline, PingStyle style)
 	{
+		this(type, point, startedNanos, durationMillis, outline, style, null);
+	}
+
+	public ActivePing(PingType type, WorldPoint point, long startedNanos, int durationMillis,
+		PingOutline outline, PingStyle style, String senderName)
+	{
 		this.type = type;
 		this.style = style;
 		this.point = point;
 		this.startedNanos = startedNanos;
 		durationNanos = durationMillis * 1_000_000L;
 		this.outline = outline;
+		this.senderName = cleanSenderName(senderName);
+	}
+
+	static String cleanSenderName(String name)
+	{
+		if (name == null || name.length() > 256)
+		{
+			return "";
+		}
+		String clean = PingStyle.cleanText(Text.removeTags(name).replace('\u00a0', ' ')).trim();
+		int end = clean.offsetByCodePoints(0, Math.min(32, clean.codePointCount(0, clean.length())));
+		return clean.substring(0, end);
+	}
+
+	public String getSenderName()
+	{
+		return senderName;
 	}
 
 	public PingOutline getOutline()

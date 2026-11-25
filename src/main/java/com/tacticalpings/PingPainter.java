@@ -33,6 +33,12 @@ public final class PingPainter
 	public static void paint(Graphics2D graphics, Projection projection, PingStyle style,
 		double progress, boolean reducedMotion, boolean label)
 	{
+		paint(graphics, projection, style, progress, reducedMotion, label, null);
+	}
+
+	public static void paint(Graphics2D graphics, Projection projection, PingStyle style,
+		double progress, boolean reducedMotion, boolean label, String senderName)
+	{
 		double opacity = PingAnimation.opacity(progress);
 		Point2D center = projection.project(0, 0);
 		if (center == null || opacity <= 0)
@@ -70,21 +76,32 @@ public final class PingPainter
 			Point2D edge = projection.project(0.5, 0.5);
 			double size = edge == null ? 11 : Math.max(7, Math.min(15, center.distance(edge) * 0.37));
 			glyph(g, style, center.getX(), center.getY(), size, opacity);
+			int labelY = (int) (center.getY() + size + 16);
 			if (label && !style.getText().isEmpty())
 			{
 				g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));
-				int x = (int) center.getX() - g.getFontMetrics().stringWidth(style.getText()) / 2;
-				int y = (int) (center.getY() + size + 16);
-				g.setColor(alpha(Color.BLACK, 200 * opacity));
-				g.drawString(style.getText(), x + 1, y + 1);
-				g.setColor(alpha(color, 240 * opacity));
-				g.drawString(style.getText(), x, y);
+				centeredText(g, style.getText(), color, (int) center.getX(), labelY, opacity);
+				labelY += 14;
+			}
+			if (senderName != null && !senderName.isEmpty())
+			{
+				g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
+				centeredText(g, senderName, new Color(225, 233, 243), (int) center.getX(), labelY, opacity);
 			}
 		}
 		finally
 		{
 			g.dispose();
 		}
+	}
+
+	private static void centeredText(Graphics2D g, String text, Color color, int centerX, int y, double opacity)
+	{
+		int x = centerX - g.getFontMetrics().stringWidth(text) / 2;
+		g.setColor(alpha(Color.BLACK, 200 * opacity));
+		g.drawString(text, x + 1, y + 1);
+		g.setColor(alpha(color, 240 * opacity));
+		g.drawString(text, x, y);
 	}
 
 	public static void glyph(Graphics2D g, PingType type, double x, double y, double size, double opacity)

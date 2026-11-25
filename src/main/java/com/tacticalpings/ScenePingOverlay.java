@@ -47,7 +47,8 @@ public class ScenePingOverlay extends Overlay
 				LocalPoint sample = local.plus((int) Math.round(x * 128), (int) Math.round(y * 128));
 				Point point = Perspective.localToCanvas(client, sample, ping.getPoint().getPlane(), 2);
 				return point == null ? null : new Point2D.Double(point.getX(), point.getY());
-			}, ping.getStyle(), ping.visualProgress(now), config.reducedMotion(), config.labels());
+			}, ping.getStyle(), ping.visualProgress(now), config.reducedMotion(), config.labels(),
+				config.senderNames() ? ping.getSenderName() : null);
 			if (config.targetOutlines())
 			{
 				targets.draw(ping, ping.visualProgress(now), config.reducedMotion());

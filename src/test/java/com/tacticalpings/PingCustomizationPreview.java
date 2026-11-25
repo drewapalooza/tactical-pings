@@ -42,19 +42,20 @@ public final class PingCustomizationPreview
 		}
 		g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
 		g.setColor(new Color(235, 240, 247));
-		g.drawString("MAKE EACH SLOT YOURS", 32, 530);
+		g.drawString("YOUR DESIGNS · OPTIONAL SENDER NAMES", 32, 530);
 		PingStyle[] designs = {
 			new PingStyle(new Color(192, 135, 255), PingSymbol.FLAG, PingSound.BELL, "Stack here"),
 			new PingStyle(new Color(255, 167, 75), PingSymbol.QUESTION, PingSound.SONAR, "Need help?"),
 			new PingStyle(new Color(88, 232, 221), PingSymbol.STAR, PingSound.CHIRP, "Focus boss"),
 			new PingStyle(new Color(105, 175, 255), PingSymbol.SHIELD, PingSound.CHORD, "Hold position")
 		};
+		String[] senders = {"Ayra", "Dawn Rune", "Oak Sage", "Lunar Fox"};
 		for (int i = 0; i < designs.length; i++)
 		{
 			Graphics2D panel = (Graphics2D) g.create(20 + i * 320, 558, 300, 245);
 			PingPreview.drawFloor(panel, 150, 130);
 			PingPainter.paint(panel, (x, y) -> new Point2D.Double(150 + x * 43 - y * 34, 130 + x * 23 + y * 28),
-				designs[i], 0.44, false, true);
+				designs[i], 0.44, false, true, senders[i]);
 			panel.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
 			panel.setColor(new Color(220, 227, 235));
 			centered(panel, "Sound: " + designs[i].getSound(), 150, 224);

@@ -304,4 +304,37 @@ public class TacticalPingsPluginTest
 		plugin.sendPing(TILE, PingSlot.TWO);
 		assertEquals(0.5, plugin.getActive().get(0).progress(System.nanoTime() + 30_000_000_000L), 0.01);
 	}
+
+	@Test
+	public void localSenderNameWorksWithoutAParty()
+	{
+		net.runelite.api.Player player = mock(net.runelite.api.Player.class);
+		when(client.getLocalPlayer()).thenReturn(player);
+		when(player.getName()).thenReturn("Ayra");
+		when(party.isInParty()).thenReturn(false);
+		plugin.sendPing(TILE, PingSlot.TWO);
+		assertEquals("Ayra", plugin.getActive().get(0).getSenderName());
+		verify(party, never()).send(any());
+	}
+
+	@Test
+	public void receivedNameComesFromThePartyMemberAndRemainsASnapshot()
+	{
+		PartyMember sender = party.getMemberById(7L);
+		when(sender.getDisplayName()).thenReturn("<col=ff0000>Dawn Rune</col>");
+		TacticalPingMessage incoming = message(301, TILE, false, TILE);
+		incoming.setStyle(new PingStyle(java.awt.Color.GREEN, PingSymbol.FLAG, PingSound.BELL, "Different name"));
+		incoming.setTarget(new PingTarget(PingTarget.Kind.PLAYER, 0, 17, "target"));
+		com.google.gson.Gson gson = new com.google.gson.Gson();
+		com.google.gson.JsonObject json = gson.toJsonTree(incoming).getAsJsonObject();
+		org.junit.Assert.assertFalse(json.has("senderName"));
+		json.addProperty("senderName", "Forged name");
+		incoming = gson.fromJson(json, TacticalPingMessage.class);
+		incoming.setMemberId(7L); // The party relay attaches identity after deserialization.
+		assertTrue(incoming.isValid(System.currentTimeMillis()));
+		plugin.onTacticalPingMessage(incoming);
+		assertEquals("Dawn Rune", plugin.getActive().get(0).getSenderName());
+		when(sender.getDisplayName()).thenReturn("Changed later");
+		assertEquals("Dawn Rune", plugin.getActive().get(0).getSenderName());
+	}
 }

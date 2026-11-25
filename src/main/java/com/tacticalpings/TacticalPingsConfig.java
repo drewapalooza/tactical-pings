@@ -99,6 +99,13 @@ public interface TacticalPingsConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(keyName = "senderNames", name = "Sender names", position = 15, section = VISUALS_SECTION,
+		description = "Show who sent each scene ping beneath its symbol/text. Uses existing RuneLite party names; works independently of Scene labels.")
+	default boolean senderNames()
+	{
+		return false;
+	}
+
 	@ConfigItem(keyName = "reducedMotion", name = "Reduced motion", position = 10, section = VISUALS_SECTION,
 		description = "Use a stationary tile and ring with a gentle fade instead of an expanding ripple")
 	default boolean reducedMotion()
